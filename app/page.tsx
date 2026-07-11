@@ -12,8 +12,7 @@ export default function HomePage() {
       <HeroSection />
       <AboutSection />
       <SkillsSection />
-      <ProjectsSection />
-      <ExperienceSection />
+      <ProjectsSection /> 
       <ContactSection />
     </PageTransition>
   );
