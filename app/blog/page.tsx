@@ -2,22 +2,31 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Calendar, Clock } from 'lucide-react';
 import { getAllPosts } from '@/lib/blog';
-import { siteConfig } from '@/lib/data';
+import { getSiteContent } from '@/lib/site-content';
+import { buildMetadata } from '@/lib/seo';
 import { PageTransition } from '@/components/page-transition';
 import { formatDate } from '@/lib/format';
 
-export const metadata: Metadata = {
-  title: 'Blog',
-  description:
-    'Articles on Next.js, React, TypeScript, full-stack architecture, and web performance by Bhoopendra Singh.',
-  alternates: { canonical: `${siteConfig.url}/blog` },
-  openGraph: {
-    title: `Blog | ${siteConfig.name}`,
+const site = getSiteContent();
+
+export const metadata: Metadata = buildMetadata(
+  {
+    title: 'Blog',
     description:
-      'Articles on Next.js, React, TypeScript, full-stack architecture, and web performance.',
-    url: `${siteConfig.url}/blog`,
+      'Articles on Next.js, React, TypeScript, full-stack architecture, and web performance by Bhoopendra Singh.',
+    path: '/blog',
+    keywords: [
+      'Next.js blog',
+      'React tutorials',
+      'TypeScript',
+      'full-stack development',
+      'web performance',
+      'Bhoopendra Singh',
+    ],
   },
-};
+  site.url,
+  site.title
+);
 
 export const dynamic = 'force-static';
 
@@ -27,7 +36,6 @@ export default function BlogPage() {
   return (
     <PageTransition>
       <div className="container py-28 sm:py-32">
-        {/* Header */}
         <div className="mx-auto mb-16 max-w-2xl text-center">
           <span className="mb-3 inline-block text-xs font-semibold uppercase tracking-[0.2em] text-primary">
             Writing
@@ -41,7 +49,6 @@ export default function BlogPage() {
           </p>
         </div>
 
-        {/* Posts */}
         {posts.length === 0 ? (
           <p className="text-center text-muted-foreground">
             No posts yet. Check back soon.

@@ -1,10 +1,10 @@
 export const siteConfig = {
   name: 'Bhoopendra Singh',
-  title: 'Full-Stack JavaScript Developer',
+  title: 'Full-Stack NextJS Developer',
   description:
-    'Full-Stack JavaScript Developer specializing in Next.js, React, TypeScript, and scalable backend systems.',
+    'Passionate Full-Stack Developer building modern, scalable, and SEO-friendly web applications with Next.js, React, TypeScript, Node.js, PostgreSQL, and Prisma.',
   url: 'https://zoro-dev.com',
-  ogImage: '/api/og',
+  ogImage: '/opengraph-image',
   links: {
     portfolio: 'https://zoro-dev.com/bhoopendra',
     github: 'https://github.com/singhbhoopendra9331',

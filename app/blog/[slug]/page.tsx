@@ -8,14 +8,21 @@ import rehypeHighlight from 'rehype-highlight';
 import rehypeSlug from 'rehype-slug';
 
 import { getAllPosts, getPostBySlug, getHeadingsFromContent } from '@/lib/blog';
-import { siteConfig } from '@/lib/data';
-import { formatDate, formatDateISO } from '@/lib/format';
+import { getSiteContent } from '@/lib/site-content';
+import {
+  buildPostMetadata,
+  buildBlogPostingJsonLd,
+  buildBreadcrumbJsonLd,
+} from '@/lib/seo';
+import { formatDate } from '@/lib/format';
 import { PageTransition } from '@/components/page-transition';
 import { TableOfContents } from '@/components/table-of-contents';
 import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-static';
 export const dynamicParams = false;
+
+const site = getSiteContent();
 
 export function generateStaticParams() {
   return getAllPosts().map((post) => ({ slug: post.slug }));
@@ -29,31 +36,7 @@ export function generateMetadata({
   const post = getPostBySlug(params.slug);
   if (!post) return {};
 
-  const url = `${siteConfig.url}/blog/${post.slug}`;
-
-  return {
-    title: post.title,
-    description: post.description,
-    alternates: { canonical: url },
-    openGraph: {
-      type: 'article',
-      title: post.title,
-      description: post.description,
-      url,
-      publishedTime: formatDateISO(post.date),
-      authors: [post.author],
-      tags: post.tags,
-      images: post.heroImage
-        ? [{ url: post.heroImage, width: 1200, height: 630, alt: post.title }]
-        : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.description,
-      images: post.heroImage ? [post.heroImage] : undefined,
-    },
-  };
+  return buildPostMetadata(post, site.url, site.title);
 }
 
 export default function BlogPostPage({
@@ -65,37 +48,27 @@ export default function BlogPostPage({
   if (!post) notFound();
 
   const headings = getHeadingsFromContent(post.content);
+  const image = post.ogImage ?? post.heroImage;
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
-    headline: post.title,
-    description: post.description,
-    datePublished: formatDateISO(post.date),
-    dateModified: formatDateISO(post.date),
-    author: {
-      '@type': 'Person',
-      name: post.author,
-      url: siteConfig.url,
-    },
-    publisher: {
-      '@type': 'Person',
-      name: siteConfig.name,
-      url: siteConfig.url,
-    },
-    mainEntityOfPage: `${siteConfig.url}/blog/${post.slug}`,
-    keywords: post.tags.join(', '),
-  };
+  const blogPostingJsonLd = buildBlogPostingJsonLd(post, site);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Home', url: site.url },
+    { name: 'Blog', url: `${site.url}/blog` },
+    { name: post.title, url: `${site.url}/blog/${post.slug}` },
+  ]);
 
   return (
     <PageTransition>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <article className="container py-28 sm:py-32">
-        {/* Back link */}
         <Link
           href="/blog"
           className="mb-10 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -104,7 +77,6 @@ export default function BlogPostPage({
           Back to blog
         </Link>
 
-        {/* Header */}
         <header className="mx-auto mb-12 max-w-3xl">
           <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
@@ -137,11 +109,10 @@ export default function BlogPostPage({
           </div>
         </header>
 
-        {/* Hero image */}
-        {post.heroImage && (
+        {image && (
           <div className="mx-auto mb-12 max-w-4xl overflow-hidden rounded-2xl border border-border/50">
             <img
-              src={post.heroImage}
+              src={image}
               alt={post.title}
               className="aspect-video w-full object-cover"
               loading="eager"
@@ -149,7 +120,6 @@ export default function BlogPostPage({
           </div>
         )}
 
-        {/* Content + TOC */}
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_220px]">
           <div className="prose prose-lg max-w-none dark:prose-invert">
             <MDXRemote
@@ -168,7 +138,6 @@ export default function BlogPostPage({
           </aside>
         </div>
 
-        {/* Footer CTA */}
         <div className="mx-auto mt-20 max-w-3xl rounded-2xl border border-border/50 bg-card/40 p-8 text-center backdrop-blur-sm">
           <h3 className="text-xl font-semibold">Enjoyed this post?</h3>
           <p className="mt-2 text-sm text-muted-foreground">

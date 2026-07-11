@@ -5,7 +5,12 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 import { CursorGlow } from '@/components/cursor-glow';
-import { siteConfig } from '@/lib/data';
+import { getSiteContent } from '@/lib/site-content';
+import {
+  buildSiteMetadata,
+  buildPersonJsonLd,
+  buildWebSiteJsonLd,
+} from '@/lib/seo';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -19,68 +24,9 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
-  title: {
-    default: `${siteConfig.name} — ${siteConfig.title}`,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: siteConfig.description,
-  keywords: [
-    'Bhoopendra Singh',
-    'Full-Stack JavaScript Developer',
-    'Next.js Developer',
-    'React Developer',
-    'TypeScript',
-    'Web Developer',
-    'Portfolio',
-  ],
-  authors: [{ name: siteConfig.name }],
-  creator: siteConfig.name,
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: siteConfig.url,
-    title: `${siteConfig.name} — ${siteConfig.title}`,
-    description: siteConfig.description,
-    siteName: siteConfig.name,
-    images: [
-      {
-        url: '/opengraph-image',
-        width: 1200,
-        height: 630,
-        alt: `${siteConfig.name} — ${siteConfig.title}`,
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${siteConfig.name} — ${siteConfig.title}`,
-    description: siteConfig.description,
-    images: ['/opengraph-image'],
-  },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/icon',
-  },
-  manifest: '/manifest.webmanifest',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  alternates: {
-    canonical: siteConfig.url,
-    types: {
-      'application/rss+xml': [{ url: '/rss.xml', title: `${siteConfig.name} Blog` }],
-    },
-  },
-};
+const site = getSiteContent();
+
+export const metadata: Metadata = buildSiteMetadata(site);
 
 export const viewport = {
   themeColor: [
@@ -91,29 +37,8 @@ export const viewport = {
   initialScale: 1,
 };
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: siteConfig.name,
-  url: siteConfig.url,
-  jobTitle: siteConfig.title,
-  description: siteConfig.description,
-  email: siteConfig.email,
-  sameAs: [
-    siteConfig.links.github,
-    siteConfig.links.linkedin,
-    siteConfig.links.portfolio,
-  ],
-  knowsAbout: [
-    'Next.js',
-    'React',
-    'TypeScript',
-    'Node.js',
-    'PostgreSQL',
-    'Prisma',
-    'Tailwind CSS',
-  ],
-};
+const personJsonLd = buildPersonJsonLd(site);
+const webSiteJsonLd = buildWebSiteJsonLd(site);
 
 export default function RootLayout({
   children,
@@ -128,7 +53,11 @@ export default function RootLayout({
       >
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
         />
         <ThemeProvider
           attribute="class"

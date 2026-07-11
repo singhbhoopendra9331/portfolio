@@ -4,6 +4,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: { unoptimized: true },
+  output: 'export',
+  distDir: 'dist',
+  basePath: '/bhoopendra',
 };
 
 module.exports = nextConfig;

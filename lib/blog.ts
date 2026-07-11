@@ -13,6 +13,10 @@ export type PostFrontmatter = {
   author: string;
   published: boolean;
   heroImage?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  ogImage?: string;
+  updated?: string;
 };
 
 export type PostMeta = PostFrontmatter & {
@@ -48,6 +52,10 @@ export function getAllPosts(): PostListItem[] {
       author: fm.author ?? 'Bhoopendra Singh',
       published: fm.published ?? true,
       heroImage: fm.heroImage,
+      seoTitle: fm.seoTitle,
+      seoDescription: fm.seoDescription,
+      ogImage: fm.ogImage,
+      updated: fm.updated,
       readingTime: stats.text,
     };
   });
@@ -76,6 +84,10 @@ export function getPostBySlug(slug: string): PostMeta | null {
     author: fm.author ?? 'Bhoopendra Singh',
     published: fm.published ?? true,
     heroImage: fm.heroImage,
+    seoTitle: fm.seoTitle,
+    seoDescription: fm.seoDescription,
+    ogImage: fm.ogImage,
+    updated: fm.updated,
     readingTime: stats.text,
     content,
   };
