@@ -1,0 +1,64 @@
+---
+title: "Mastering Server Components in the App Router"
+description: "Understanding when to use Server Components, Client Components, and how to draw the boundary for maximum performance."
+date: "2024-11-20"
+tags: ["Next.js", "React", "Performance"]
+author: "Bhoopendra Singh"
+published: true
+heroImage: "https://images.pexels.com/photos/11035471/pexels-photo-11035471.jpeg?auto=compress&cs=tinysrgb&w=1200"
+---
+
+The App Router introduced a fundamental shift: **components are server-side by default**. This changes how we think about data fetching, bundles, and interactivity. Let's break down the mental model.
+
+## The Default Is Server
+
+Every component in the `app/` directory is a Server Component unless you explicitly opt out with `"use client"`. This means:
+
+- You can `await` database queries directly in the component
+- No JavaScript is shipped to the client for that component
+- You have access to server-only APIs and secrets
+
+```tsx
+// This is a Server Component — no "use client" directive
+import { db } from '@/lib/db';
+
+export default async function ProjectList() {
+  const projects = await db.project.findMany({
+    where: { featured: true },
+  });
+
+  return (
+    <ul>
+      {projects.map((p) => (
+        <li key={p.id}>{p.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## When to Reach for "use client"
+
+You need a Client Component when you require:
+
+- Interactivity (onClick, onChange, useState)
+- Browser APIs (window, localStorage, IntersectionObserver)
+- Animation libraries like Framer Motion
+
+The goal is to push the client boundary as far down the tree as possible.
+
+## The Composition Pattern
+
+The trick is to keep your page as a Server Component and pass server-fetched data into small, leaf-level Client Components.
+
+```tsx
+// page.tsx — Server Component
+export default async function Page() {
+  const posts = await getPosts();
+  return <LikeButton posts={posts} />; // Client Component receives data
+}
+```
+
+## Summary
+
+Think of the component tree as a river. Data flows from the server at the top, and only the smallest tributaries at the bottom need to become client-side. This keeps your bundles small and your pages fast.

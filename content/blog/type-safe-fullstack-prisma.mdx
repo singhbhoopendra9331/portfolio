@@ -1,0 +1,65 @@
+---
+title: "Type-Safe Full-Stack Development with Prisma and TypeScript"
+description: "How Prisma ORM and TypeScript together eliminate entire classes of runtime errors in full-stack JavaScript applications."
+date: "2024-10-05"
+tags: ["TypeScript", "Prisma", "PostgreSQL"]
+author: "Bhoopendra Singh"
+published: true
+heroImage: "https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg?auto=compress&cs=tinysrgb&w=1200"
+---
+
+Type safety is not a luxury — it is a productivity multiplier. When your database schema, your queries, and your API responses are all typed, you catch bugs before they reach production. **Prisma** combined with **TypeScript** makes this a reality.
+
+## The Schema Is the Source of Truth
+
+With Prisma, your `schema.prisma` file is the single source of truth. Running `prisma generate` produces a client where every model, every field, and every relation is fully typed.
+
+```prisma
+model User {
+  id    String @id @default(cuid())
+  email String @unique
+  name  String?
+  posts Post[]
+}
+```
+
+## Queries Are Typed End-to-End
+
+When you query the database, the return type is inferred automatically.
+
+```typescript
+const user = await db.user.findUnique({
+  where: { id: '1' },
+  include: { posts: true },
+});
+
+// TypeScript knows: user is (User & { posts: Post[] }) | null
+if (user) {
+  user.posts.forEach((post) => console.log(post.title));
+}
+```
+
+No more guessing the shape of your data. The compiler tells you.
+
+## Validate at the Boundary
+
+For user input, pair Prisma with Zod. Define a schema, validate the input, and pass the typed result to Prisma.
+
+```typescript
+import { z } from 'zod';
+
+const CreatePostSchema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().min(1),
+});
+
+type CreatePostInput = z.infer<typeof CreatePostSchema>;
+
+async function createPost(input: CreatePostInput) {
+  return db.post.create({ data: input });
+}
+```
+
+## Conclusion
+
+Type-safe full-stack development is about building a pipeline where invalid states are impossible to express. Prisma and TypeScript give you that pipeline, from the database to the UI.

@@ -1,0 +1,85 @@
+---
+title: "Building a Production-Ready CMS with Next.js 15"
+description: "A deep dive into the architecture behind Nextcom — SSR, Prisma ORM, PostgreSQL, media management, and a modern admin dashboard."
+date: "2024-12-15"
+tags: ["Next.js", "Prisma", "PostgreSQL", "Architecture"]
+author: "Bhoopendra Singh"
+published: true
+heroImage: "https://images.pexels.com/photos/1181271/pexels-photo-1181271.jpeg?auto=compress&cs=tinysrgb&w=1200"
+---
+
+When I set out to build **Nextcom**, my goal was simple: create a content management system that feels as fast as a static site but has the flexibility of a full database-backed application. Here's how I approached it.
+
+## Server-Side Rendering First
+
+The App Router in Next.js 15 gives you a spectrum of rendering strategies. For a CMS, the default should always be **server-side rendering**. Every content page is rendered on the server with fresh data from PostgreSQL, which means:
+
+- No stale content from over-aggressive caching
+- SEO-friendly HTML delivered immediately
+- Zero loading spinners for first paint
+
+```typescript
+// app/(cms)/posts/[slug]/page.tsx
+export const dynamic = 'force-dynamic';
+
+export default async function PostPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const post = await db.post.findUnique({
+    where: { slug: params.slug },
+  });
+
+  if (!post) notFound();
+
+  return <Article data={post} />;
+}
+```
+
+## Type-Safe Data with Prisma
+
+Prisma ORM is the backbone of the data layer. It generates a fully typed client from your schema, which means database queries are checked at compile time.
+
+```prisma
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  published Boolean  @default(false)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+Every field is typed. Every relation is explicit. Refactoring the schema becomes a safe, traceable operation.
+
+## Media Management
+
+Uploading and transforming media is handled by Cloudinary. The flow is straightforward: the client requests a signed upload URL from an API route, uploads directly to Cloudinary, and then stores the returned public ID in PostgreSQL.
+
+This keeps large binary traffic off your server and gives you on-the-fly transformations.
+
+## Authentication
+
+I use cookie-based sessions with hashed passwords. The key principles:
+
+1. Hash passwords with bcrypt
+2. Store sessions in secure, httpOnly cookies
+3. Validate the session on every protected route
+
+## The Admin Dashboard
+
+The admin dashboard is where the CMS earns its keep. It includes:
+
+- A rich text editor with live preview
+- Media library with drag-and-drop uploads
+- Role-based access control
+- Analytics for content performance
+
+## Conclusion
+
+Building a production-ready CMS taught me that the best architecture is the one that makes the right thing easy. Server components by default, Prisma for type safety, and Cloudinary for media — each choice removes a class of problems rather than just solving one.
